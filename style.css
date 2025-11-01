@@ -63,10 +63,10 @@ a{color:inherit;text-decoration:none}
 .btn-primary:hover{transform:translateY(-3px)}
 .btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfe7ff}
 
-/* big circular discord button */
+/* --- smaller circular discord button (reduced per request) --- */
 .discord-big-wrap{margin-top:18px;display:flex;justify-content:center}
-.discord-big{width:84px;height:84px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-.discord-big img{width:48px;height:48px;display:block}
+.discord-big{width:64px;height:64px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.discord-big img{width:36px;height:36px;display:block}
 
 /* overlay modal */
 .open-overlay{position:fixed;inset:0;background:rgba(2,2,6,0.6);backdrop-filter: blur(6px);display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer}
@@ -97,7 +97,7 @@ a{color:inherit;text-decoration:none}
   .avatar{width:52px;height:52px}
   .hero-title{font-size:28px}
   .topnav{gap:10px}
-  .discord-big{width:72px;height:72px}
-  .discord-big img{width:40px;height:40px}
+  .discord-big{width:56px;height:56px}
+  .discord-big img{width:30px;height:30px}
   .open-box{padding:18px 22px}
 }
