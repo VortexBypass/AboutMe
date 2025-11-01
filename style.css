@@ -1,12 +1,29 @@
-
-
-/* make emoji monochrome by desaturating and removing color */
-.hero-title .emoji {
-  display:inline-block;
-  filter: grayscale(1) saturate(0) brightness(1);
-  -webkit-filter: grayscale(1) saturate(0) brightness(1);
-  transform: translateY(1px);
-  font-size: 1em;
-  line-height: 1;
-  margin-left: 6px;
+:root{
+  --bg-1:#05060a; --bg-2:#07080b; --accent-1:#d94f4f; --accent-2:#ff9a4d; --muted:#9aa6b3;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
 }
+html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#e6eef8;overflow-x:hidden}
+.body-gradient{position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(120deg, rgba(217,79,79,0.06), rgba(255,154,77,0.04), rgba(255,215,102,0.03));background-size:300% 300%;animation:moveGradient 18s linear infinite;mix-blend-mode:screen}
+@keyframes moveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;position:sticky;top:0;z-index:20;background:rgba(0,0,0,0.25);backdrop-filter:blur(6px)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.avatar{width:56px;height:56px;border-radius:12px;object-fit:cover}
+.title-block .name{font-weight:800}
+.title-block .subtitle{font-size:12px;color:var(--muted)}
+.topnav{display:flex;gap:14px}
+.hero{display:flex;justify-content:center;padding:64px 18px 80px;position:relative;z-index:10}
+.hero-inner{width:920px;max-width:96%;padding:28px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);text-align:center}
+.hero-title{font-size:36px;margin:6px 0;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));-webkit-background-clip:text;color:transparent;font-weight:800}
+.hero-title .emoji{filter:grayscale(1) saturate(0) brightness(1);display:inline-block;margin-left:6px}
+.hero-sub{color:var(--muted);max-width:85%;margin:0 auto 16px;word-wrap:break-word}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-weight:700}
+.btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfe7ff}
+.discord-big-wrap{margin-top:18px;display:flex;justify-content:center}
+.discord-big{width:84px;height:84px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.03)}
+.discord-big img{width:48px;height:48px}
+.open-overlay{position:fixed;inset:0;background:rgba(2,2,6,0.6);backdrop-filter: blur(6px);display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer}
+.open-box{padding:20px 28px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+.open-text{font-weight:800;font-size:18px;color:#fff}
+.footer{padding:24px;text-align:center;color:var(--muted)}
+@media (max-width:880px){.hero-inner{padding:20px}.hero-title{font-size:24px}.discord-big{width:72px;height:72px}.discord-big img{width:40px;height:40px}}
