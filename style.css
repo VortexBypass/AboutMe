@@ -1,0 +1,94 @@
+:root{
+  --bg-1:#05060a;
+  --bg-2:#07080b;
+  --glass:#0f1720aa;
+  --accent-1:#d94f4f; /* deep red */
+  --accent-2:#ff9a4d; /* warm orange */
+  --muted: #9aa6b3;
+  --card: rgba(255,255,255,0.03);
+  --glass-strong: rgba(18,20,24,0.55);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:
+  radial-gradient(800px 400px at 10% 10%, rgba(217,79,79,0.06), transparent 8%),
+  radial-gradient(700px 350px at 90% 90%, rgba(255,154,77,0.03), transparent 6%),
+  linear-gradient(180deg,var(--bg-1),var(--bg-2));
+  color:#e6eef8;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
+
+/* animated moving gradient overlay */
+.body-gradient {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background: linear-gradient(120deg, rgba(217,79,79,0.06), rgba(255,154,77,0.04), rgba(255,215,102,0.03));
+  background-size: 300% 300%;
+  animation: moveGradient 18s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes moveGradient {
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,0.02);position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);backdrop-filter: blur(6px);z-index:20;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.avatar{width:56px;height:56px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,0.04);flex-shrink:0}
+.title-block .name{font-weight:800;font-size:18px;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title-block .subtitle{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.small{font-size:13px}
+.topnav{display:flex;gap:14px;align-items:center;white-space:nowrap;flex-shrink:0}
+.topnav a{color:rgba(230,238,248,0.86);font-weight:600;padding:8px 10px;border-radius:8px}
+.topnav a.active{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{display:flex;align-items:center;justify-content:center;padding:64px 20px 100px;position:relative;z-index:10}
+.hero-inner{width:920px;max-width:96%;padding:40px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 10px 30px rgba(3,6,10,0.6);text-align:center;border:1px solid rgba(255,255,255,0.03);position:relative}
+.glass{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:20px}
+.hero-title{font-size:40px;margin:6px 0 12px;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.hero-sub{color:var(--muted);margin-bottom:18px;max-width:85%;margin-left:auto;margin-right:auto;word-wrap:break-word}
+.hero-actions{display:flex;gap:12px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-weight:700}
+.btn-primary{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#081018;border:none;box-shadow:0 8px 22px rgba(217,79,79,0.08);transition:transform .12s ease}
+.btn-primary:hover{transform:translateY(-3px)}
+.btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfe7ff}
+.btn-icon{width:20px;height:20px;display:inline-block;flex-shrink:0}
+.discord-big-wrap{margin-top:18px;display:flex;justify-content:center}
+.discord-big{width:84px;height:84px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.discord-big img{width:48px;height:48px;display:block}
+
+/* overlay modal */
+.open-overlay{position:fixed;inset:0;background:rgba(2,2,6,0.6);backdrop-filter: blur(6px);display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer}
+.open-box{padding:26px 36px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 44px rgba(0,0,0,0.7)}
+.open-text{font-weight:800;font-size:20px;letter-spacing:0.6px;color:#fff}
+
+/* rest of styles */
+.content{padding:48px 20px}
+.glass-page{display:flex;justify-content:center}
+.content-inner{width:920px;max-width:96%;background:var(--glass-strong);padding:28px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 24px rgba(0,0,0,0.6)}
+.muted{color:var(--muted)}
+.bot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
+.bot-card{background:var(--card);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);overflow:hidden;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
+.bot-card h3{margin:4px 0 8px;font-size:18px;line-height:1.1;word-break:break-word}
+.bot-card p{margin:0;color:var(--muted);font-size:13px;overflow-wrap:break-word;word-break:break-word}
+.bot-actions{margin-top:12px}
+.server-box{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);margin-top:18px;flex-wrap:wrap}
+.server-left{min-width:0}
+.server-left h3{margin:0 0 6px;font-size:18px}
+.server-url{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:10px 12px;border-radius:8px;font-weight:700;overflow-wrap:anywhere;min-width:160px}
+.footer{padding:24px 28px;text-align:center;color:var(--muted)}
+.small{font-size:13px}
+
+/* Responsive */
+@media (max-width:880px){
+  .bot-grid{grid-template-columns:1fr}
+  .topbar{padding:12px}
+  .avatar{width:52px;height:52px}
+  .hero-title{font-size:28px}
+  .topnav{gap:10px}
+  .discord-big{width:72px;height:72px}
+  .discord-big img{width:40px;height:40px}
+  .open-box{padding:18px 22px}
+}
