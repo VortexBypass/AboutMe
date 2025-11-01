@@ -1,68 +1,91 @@
-// Handles overlay click, audio playback and file fallback.
-// Overlay will only show once per browser (using localStorage 'afk_opened') and only on pages that include the overlay element.
-//
-// Behavior improvements:
-// - If body.dataset.audio contains multiple filenames separated by '|' or ',', they'll all be tried in order.
-// - Filenames are encoded with encodeURI() so special characters and spaces are supported.
-// - If none of the candidates play, falls back to 'song.mp3' then opens a file picker.
-
+// script.js
 (function(){
   const overlay = document.getElementById('open-overlay');
   const fileInput = document.getElementById('file-input');
 
-  // create an audio element but don't load source until needed
   const audio = new Audio();
-  audio.loop = true;
+  audio.loop = false; // playlist handled manually
   audio.preload = 'auto';
   audio.crossOrigin = 'anonymous';
 
-  async function tryPlayRaw(src) {
-    return new Promise((resolve, reject) => {
-      if (!src) return reject(new Error('no-src'));
+  // Default playlist (your provided filenames). Put these files next to HTML.
+  const defaultPlaylist = [
+    "𝙳 𝚈 𝚂 𝚃 𝙾 𝙿 𝙸 𝙲 - dreamy nights (youtube).mp3",
+    "instupendo - comfort chain (speed up) - kew3z (youtube).mp3"
+  ];
+
+  function getPlaylistFromBody() {
+    const raw = document.body.dataset.playlist;
+    if (!raw) return null;
+    return raw.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  function encodeSrc(src) {
+    // encodeURI handles spaces and many characters; keep filenames intact where possible
+    return encodeURI(src);
+  }
+
+  function playAt(index, playlist) {
+    if (!playlist || playlist.length === 0) return Promise.reject(new Error('empty-playlist'));
+    const src = encodeSrc(playlist[index]);
+    audio.src = src;
+    return audio.play();
+  }
+
+  async function tryPlayPlaylist(playlist, startIndex) {
+    if (!playlist || playlist.length === 0) return Promise.reject(new Error('no-playlist'));
+    let idx = startIndex % playlist.length;
+    for (let attempt = 0; attempt < playlist.length; attempt++) {
+      const tryIdx = (idx + attempt) % playlist.length;
       try {
-        const encoded = encodeURI(src);
-        audio.src = encoded;
-      } catch (e) {
-        audio.src = src;
+        await playAt(tryIdx, playlist);
+        currentIndex = tryIdx;
+        console.log('Playing:', playlist[currentIndex]);
+        return true;
+      } catch (err) {
+        console.warn('Failed to play', playlist[tryIdx], err && err.message);
       }
-      // attempt to play; browser may reject without user gesture but handle here after gesture
-      audio.play().then(() => resolve()).catch(err => reject(err));
-    });
+    }
+    return false;
   }
 
   async function handleOpen() {
-    // set flag so overlay won't show again
     try { localStorage.setItem('afk_opened','1'); } catch(e){}
-
-    // hide overlay immediately if it exists
     if (overlay) overlay.style.display = 'none';
 
-    const prefer = document.body.dataset.audio && document.body.dataset.audio.trim();
-    const candidates = [];
+    // choose playlist: body dataset overrides default
+    let playlist = getPlaylistFromBody() || defaultPlaylist.slice();
+    if (playlist.length === 0) playlist = ["song.mp3"];
 
-    if (prefer) {
-      // Split by pipe or comma and trim entries
-      const parts = prefer.split(/\||,/).map(s => s.trim()).filter(Boolean);
-      candidates.push(...parts);
-    }
-    // fallback default
-    candidates.push('song.mp3');
-
-    for (const c of candidates) {
-      try {
-        await tryPlayRaw(c);
-        console.log('Playing audio:', c);
-        return;
-      } catch (err) {
-        console.log('Failed to play', c, err && err.message);
-      }
+    const startIdx = Math.floor(Math.random() * playlist.length);
+    const ok = await tryPlayPlaylist(playlist, startIdx);
+    if (ok) {
+      // when a track ends, play next track (wraps)
+      audio.onended = () => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        const nextSrc = encodeSrc(playlist[currentIndex]);
+        audio.src = nextSrc;
+        audio.play().catch(err => {
+          console.warn('Failed to play next track', nextSrc, err && err.message);
+        });
+      };
+      return;
     }
 
-    // fallback: show file picker
+    // fallback to song.mp3
+    try {
+      await playAt(0, ["song.mp3"]);
+      currentIndex = 0;
+      return;
+    } catch (err) {
+      console.warn('Fallback song.mp3 failed, opening file picker', err && err.message);
+    }
+
+    // final fallback: prompt user to choose
     if (fileInput) fileInput.click();
   }
 
-  // file input handler
+  // file picker handler
   if (fileInput) {
     fileInput.addEventListener('change', (e) => {
       const f = e.target.files && e.target.files[0];
@@ -73,9 +96,8 @@
     });
   }
 
-  // Only attach overlay handlers if overlay element exists
+  // Only attach overlay logic if overlay exists (home page). overlay shows once per browser
   if (overlay) {
-    // if we've already opened before, hide overlay
     let opened = false;
     try { opened = localStorage.getItem('afk_opened') === '1'; } catch(e){}
     if (opened) {
@@ -86,11 +108,12 @@
     }
   }
 
-  // add animated background element (ensures only one exists)
+  // ensure single animated gradient overlay exists across pages
   if (!document.querySelector('.body-gradient')) {
     const bg = document.createElement('div');
     bg.className = 'body-gradient';
     document.documentElement.appendChild(bg);
   }
 
+  let currentIndex = 0;
 })();
