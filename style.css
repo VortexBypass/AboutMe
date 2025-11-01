@@ -1,0 +1,12 @@
+
+
+/* make emoji monochrome by desaturating and removing color */
+.hero-title .emoji {
+  display:inline-block;
+  filter: grayscale(1) saturate(0) brightness(1);
+  -webkit-filter: grayscale(1) saturate(0) brightness(1);
+  transform: translateY(1px);
+  font-size: 1em;
+  line-height: 1;
+  margin-left: 6px;
+}
