@@ -20,17 +20,13 @@ html,body{height:100%;margin:0;background:
   z-index:0;
   pointer-events:none;
   background: linear-gradient(120deg, rgba(217,79,79,0.06), rgba(255,154,77,0.04), rgba(255,215,102,0.03));
-  background-size: 300% 300%;
-  animation: moveGradient 18s linear infinite;
-  mix-blend-mode: screen;
+  background-size:300% 300%;
+  animation:moveGradient 18s linear infinite;
+  mix-blend-mode:screen;
 }
-@keyframes moveGradient {
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
+@keyframes moveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 a{color:inherit;text-decoration:none}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,0.02);position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);backdrop-filter: blur(6px);z-index:20;gap:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,0.02);position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);backdrop-filter:blur(6px);z-index:20;gap:12px}
 .topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
 .avatar{width:56px;height:56px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,0.04);flex-shrink:0}
 .title-block .name{font-weight:800;font-size:18px;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -41,7 +37,7 @@ a{color:inherit;text-decoration:none}
 .topnav a.active{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero{display:flex;align-items:center;justify-content:center;padding:64px 20px 100px;position:relative;z-index:10}
 .hero-inner{width:920px;max-width:96%;padding:40px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 10px 30px rgba(3,6,10,0.6);text-align:center;border:1px solid rgba(255,255,255,0.03);position:relative;overflow:hidden}
-.glass{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:20px}
+.glass{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:20px}
 .hero-title{font-size:40px;margin:6px 0 12px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
 .hero-text{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;}
 .hero-emoji{font-size:1.05em;background:none!important;-webkit-text-fill-color:initial;color:inherit;filter:none;mix-blend-mode:normal}
@@ -58,30 +54,11 @@ a{color:inherit;text-decoration:none}
 .discord-big-wrap{display:flex;justify-content:flex-end}
 .discord-big{width:64px;height:64px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
 .discord-big img{width:36px;height:36px;display:block}
-.open-overlay{position:fixed;inset:0;background:rgba(2,2,6,0.6);backdrop-filter: blur(6px);display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer}
-.open-box{padding:26px 36px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 44px rgba(0,0,0,0.7)}
+.open-overlay{position:fixed;inset:0;background:rgba(2,2,6,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer}
+.open-box{padding:26px 36px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 44px rgba(0,0,0.7)}
 .open-text{font-weight:800;font-size:20px;letter-spacing:0.6px;color:#fff}
-.content{padding:48px 20px}
-.glass-page{display:flex;justify-content:center}
-.content-inner{width:920px;max-width:96%;background:var(--glass-strong);padding:28px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 24px rgba(0,0,0,0.6)}
-.muted{color:var(--muted)}
-.bot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
-.bot-card{background:var(--card);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);overflow:hidden;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
-.bot-card h3{margin:4px 0 8px;font-size:18px;line-height:1.1;word-break:break-word}
-.bot-card p{margin:0;color:var(--muted);font-size:13px;overflow-wrap:break-word;word-break:break-word}
-.bot-actions{margin-top:12px}
-.server-box{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);margin-top:18px;flex-wrap:wrap}
-.server-left{min-width:0}
-.server-left h3{margin:0 0 6px;font-size:18px}
-.server-url{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:10px 12px;border-radius:8px;font-weight:700;overflow-wrap:anywhere;min-width:160px}
-.footer{padding:24px 28px;text-align:center;color:var(--muted)}
-.small{font-size:13px}
 @media (max-width:880px){
-  .bot-grid{grid-template-columns:1fr}
-  .topbar{padding:12px}
-  .avatar{width:52px;height:52px}
-  .hero-title{font-size:28px}
-  .topnav{gap:10px}
+  .hero-actions{flex-direction:column;align-items:center;}
   .discord-big{width:56px;height:56px}
   .discord-big img{width:30px;height:30px}
   .open-box{padding:18px 22px}
