@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 
-<!-- data-playlist: comma-separated filenames placed in same folder -->
+<!-- data-playlist optional; you can change filenames here -->
 <body data-playlist="𝙳 𝚈 𝚂 𝚃 𝙾 𝙿 𝙸 𝙲 - dreamy nights (youtube).mp3, instupendo - comfort chain (speed up) - kew3z (youtube).mp3">
 
   <header class="topbar">
@@ -21,21 +21,20 @@
       </div>
     </div>
 
-    <nav class="topnav" aria-label="Main navigation">
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="servers.html">Servers</a>
-      <a class="nav-link" href="bots.html">Bots</a>
+    <nav class="topnav" role="navigation" aria-label="Main navigation">
+      <a href="about.html">About</a>
+      <a href="servers.html">Servers</a>
+      <a href="bots.html">Bots</a>
 
-      <!-- Song dropdown button (doesn't navigate) -->
-      <div class="song-control" id="song-control">
-        <button id="song-toggle" class="song-btn" aria-haspopup="true" aria-expanded="false" type="button">Song ▾</button>
-        <div id="song-dropdown" class="song-dropdown" role="menu" aria-hidden="true">
+      <!-- Song menu button (opens dropdown, no navigation) -->
+      <div class="song-menu">
+        <button id="song-menu-btn" class="menu-btn" aria-haspopup="true" aria-expanded="false">Song ▾</button>
+        <div id="song-menu" class="song-menu-dropdown" role="menu" aria-hidden="true">
           <div class="song-title" id="song-title">—</div>
-          <div class="song-buttons">
-            <button id="song-prev" class="ctl">Prev</button>
-            <button id="song-play" class="ctl">Play</button>
-            <button id="song-pause" class="ctl">Pause</button>
-            <button id="song-next" class="ctl">Next</button>
+          <div class="song-controls">
+            <button id="song-prev" class="ctrl">Prev</button>
+            <button id="song-playpause" class="ctrl">Play</button>
+            <button id="song-next" class="ctrl">Next</button>
           </div>
         </div>
       </div>
@@ -75,6 +74,7 @@
     <div class="small muted">Built by AFK™.lol — Discord bot developer</div>
   </footer>
 
+  <!-- fallback file picker for audio if playlist fails -->
   <input id="file-input" type="file" accept=".mp3" style="display:none" />
 
   <script src="script.js"></script>
