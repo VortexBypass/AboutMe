@@ -1,33 +1,46 @@
-// script.js — robust overlay + playlist + resume-across-pages logic
-// Usage: put your mp3 files in the same folder and/or set <body data-playlist="a.mp3, b.mp3">
+// script.js
+// Playlist playback + overlay + persistent unique visit count via countapi.xyz
+// - Playlist loops through tracks sequentially (wraps).
+// - Visits counter increments once per browser (localStorage.afk_counted) using countapi.xyz.
+// - If autoplay blocked on page-load restore, a small "Resume audio" button will appear.
 
 (function(){
+  // ---- localStorage keys ----
   const OPENED_KEY = 'afk_opened';
   const IDX_KEY = 'afk_idx';
   const POS_KEY = 'afk_pos';
   const PLAYING_KEY = 'afk_playing';
+  const COUNTED_KEY = 'afk_counted'; // for visits
 
-  // UI elements (overlay exists only on index/home page)
+  // ---- DOM references (populated on DOMContentLoaded) ----
   let overlay = null;
   let fileInput = null;
   let resumeBtn = null;
+  let visitsEl = null;
+  let visCountSpan = null;
 
-  // audio element and state
+  // ---- audio / playlist state ----
   const audio = new Audio();
   audio.preload = 'auto';
   audio.crossOrigin = 'anonymous';
-  audio.loop = false;
-
+  audio.loop = false; // playlist handled manually
   let currentIndex = 0;
   let playlist = [];
 
-  // default playlist (your two files)
+  // ---- default playlist (your provided filenames) ----
   const defaultPlaylist = [
     "𝙳 𝚈 𝚂 𝚃 𝙾 𝙿 𝙸 𝙲 - dreamy nights (youtube).mp3",
     "instupendo - comfort chain (speed up) - kew3z (youtube).mp3"
   ];
 
-  // helper: build playlist (body dataset overrides)
+  // ---- countapi settings (global visits) ----
+  // namespace/key — change if you want a different counter
+  const COUNT_NAMESPACE = 'afk-lol';
+  const COUNT_KEY = 'visits';
+  const COUNT_HIT_URL = `https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NAMESPACE)}/${encodeURIComponent(COUNT_KEY)}`;
+  const COUNT_GET_URL = `https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NAMESPACE)}/${encodeURIComponent(COUNT_KEY)}`;
+
+  // ---------- helpers ----------
   function getPlaylistFromBody() {
     try {
       const raw = document.body.getAttribute('data-playlist') || document.body.dataset.playlist;
@@ -39,8 +52,6 @@
   }
 
   function encodeSrc(src) {
-    // encodeURI preserves path-safe chars, and handles spaces & unicode reasonably.
-    // If your filenames are in the same folder, this will form a valid URL for the browser to request.
     return encodeURI(src);
   }
 
@@ -49,9 +60,7 @@
       if (typeof index === 'number') localStorage.setItem(IDX_KEY, String(index));
       if (typeof pos === 'number') localStorage.setItem(POS_KEY, String(pos));
       if (typeof playing !== 'undefined') localStorage.setItem(PLAYING_KEY, playing ? '1' : '0');
-    } catch (e) {
-      // ignore storage errors (e.g., private mode)
-    }
+    } catch (e) {}
   }
 
   function loadState() {
@@ -65,30 +74,60 @@
     }
   }
 
-  function tryPlayAt(idx) {
+  // ---------- visits (countapi) ----------
+  async function fetchAndMaybeIncrementVisits() {
+    // If user already counted from this browser, do GET only; otherwise call /hit to increment and set flag.
+    const counted = localStorage.getItem(COUNTED_KEY) === '1';
+    try {
+      if (!counted) {
+        // increment (hit)
+        const res = await fetch(COUNT_HIT_URL, { method: 'GET' }); // countapi uses GET for hit as well
+        if (res.ok) {
+          const json = await res.json();
+          if (json && (typeof json.value !== 'undefined')) {
+            visCountSpan.textContent = String(json.value);
+            try { localStorage.setItem(COUNTED_KEY,'1'); } catch(e){}
+            return;
+          }
+        }
+      }
+      // otherwise get current value
+      const g = await fetch(COUNT_GET_URL, { method: 'GET' });
+      if (g.ok) {
+        const j = await g.json();
+        if (j && (typeof j.value !== 'undefined')) {
+          visCountSpan.textContent = String(j.value);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('visits fetch failed', err);
+      // if API fails, show dash
+      visCountSpan.textContent = '—';
+    }
+  }
+
+  // ---------- playback functions ----------
+  function playAt(index) {
     return new Promise((resolve, reject) => {
       if (!playlist || playlist.length === 0) return reject(new Error('empty-playlist'));
-      currentIndex = idx % playlist.length;
+      currentIndex = index % playlist.length;
       const src = encodeSrc(playlist[currentIndex]);
       audio.src = src;
-      // attempt playback
       audio.play().then(() => {
         saveState(currentIndex, audio.currentTime || 0, true);
         resolve(true);
-      }).catch(err => {
-        reject(err);
-      });
+      }).catch(err => reject(err));
     });
   }
 
-  // attempt to play playlist starting at startIndex; try each track once if some fail.
   async function tryPlayPlaylist(startIndex) {
     if (!playlist || playlist.length === 0) return false;
     let start = startIndex % playlist.length;
     for (let attempt = 0; attempt < playlist.length; attempt++) {
       const tryIdx = (start + attempt) % playlist.length;
       try {
-        await tryPlayAt(tryIdx);
+        await playAt(tryIdx);
         return true;
       } catch (err) {
         console.warn('track failed to play:', playlist[tryIdx], err && err.message);
@@ -97,7 +136,7 @@
     return false;
   }
 
-  // fallback file picker
+  // ---------- file picker fallback ----------
   function openFilePicker() {
     if (!fileInput) {
       fileInput = document.createElement('input');
@@ -113,75 +152,69 @@
         audio.play().then(()=> {
           saveState(0, audio.currentTime || 0, true);
           startSaving();
-          hideResumeButton();
+          removeResumeButton();
         }).catch(err => console.warn('file-play failed', err));
       });
     }
     fileInput.click();
   }
 
-  // small resume button for pages where autoplay is blocked
+  // ---------- resume button ----------
   function createResumeButton() {
     if (resumeBtn) return;
     resumeBtn = document.createElement('button');
     resumeBtn.innerText = 'Resume audio';
     resumeBtn.title = 'Resume site audio';
-    resumeBtn.style.position = 'fixed';
-    resumeBtn.style.right = '12px';
-    resumeBtn.style.top = '12px';
-    resumeBtn.style.zIndex = 60;
-    resumeBtn.style.padding = '8px 10px';
-    resumeBtn.style.borderRadius = '8px';
-    resumeBtn.style.border = 'none';
-    resumeBtn.style.background = 'linear-gradient(90deg,#d94f4f,#ff9a4d)';
-    resumeBtn.style.color = '#071018';
-    resumeBtn.style.fontWeight = '700';
-    resumeBtn.style.cursor = 'pointer';
-    resumeBtn.style.boxShadow = '0 6px 18px rgba(0,0,0,0.5)';
+    Object.assign(resumeBtn.style, {
+      position: 'fixed',
+      right: '12px',
+      top: '12px',
+      zIndex: 60,
+      padding: '8px 10px',
+      borderRadius: '8px',
+      border: 'none',
+      background: 'linear-gradient(90deg,#d94f4f,#ff9a4d)',
+      color: '#071018',
+      fontWeight: '700',
+      cursor: 'pointer',
+      boxShadow: '0 6px 18px rgba(0,0,0,0.5)'
+    });
     resumeBtn.addEventListener('click', async () => {
-      hideResumeButton();
-      // attempt resume from saved state
+      removeResumeButton();
       const st = loadState();
       playlist = getPlaylistFromBody() || defaultPlaylist.slice();
       if (playlist.length === 0) playlist = ['song.mp3'];
       currentIndex = st.idx || 0;
       try {
-        await tryPlayAt(currentIndex);
-        // set time if saved
+        await playAt(currentIndex);
         try { if (st.pos && audio.duration && st.pos < audio.duration) audio.currentTime = st.pos; } catch(e){}
         startSaving();
       } catch (err) {
-        // try to play playlist from random spot
         const ok = await tryPlayPlaylist(Math.floor(Math.random() * playlist.length));
-        if (!ok) {
-          // fallback: open file picker
-          openFilePicker();
-        } else {
-          startSaving();
-        }
+        if (!ok) openFilePicker();
+        else startSaving();
       }
     });
     document.body.appendChild(resumeBtn);
   }
-
-  function hideResumeButton() {
+  function removeResumeButton() {
     if (resumeBtn && resumeBtn.parentNode) resumeBtn.parentNode.removeChild(resumeBtn);
     resumeBtn = null;
   }
 
-  // save periodically
+  // ---------- periodic saving ----------
   let saveInterval = null;
   function startSaving() {
     if (saveInterval) return;
     saveInterval = setInterval(() => {
-      try { saveState(currentIndex, audio.currentTime || 0, !audio.paused); } catch(e){}
+      try { localStorage.setItem(IDX_KEY, String(currentIndex)); localStorage.setItem(POS_KEY, String(audio.currentTime || 0)); localStorage.setItem(PLAYING_KEY, audio.paused ? '0' : '1'); } catch(e){}
     }, 1000);
   }
   function stopSaving() {
     if (saveInterval) { clearInterval(saveInterval); saveInterval = null; }
   }
 
-  // handle end-of-track -> play next (wrap)
+  // ---------- audio ended => next ----------
   audio.addEventListener('ended', () => {
     if (!playlist || playlist.length === 0) return;
     currentIndex = (currentIndex + 1) % playlist.length;
@@ -189,17 +222,15 @@
     audio.src = next;
     audio.play().catch(err => {
       console.warn('play next failed', err);
-      // if fails, show resume button so user can resume manually
       createResumeButton();
     });
   });
 
-  // main "open" invoked by overlay click (user gesture)
+  // ---------- main open handler (user gesture) ----------
   async function handleOpenGesture() {
-    try {
-      localStorage.setItem(OPENED_KEY, '1');
-    } catch (e){}
+    try { localStorage.setItem(OPENED_KEY, '1'); } catch(e){}
     if (overlay) overlay.style.display = 'none';
+
     playlist = getPlaylistFromBody() || defaultPlaylist.slice();
     if (playlist.length === 0) playlist = ['song.mp3'];
 
@@ -207,8 +238,7 @@
     const ok = await tryPlayPlaylist(startIdx).catch(()=>false);
     if (ok) {
       startSaving();
-      hideResumeButton();
-      // save initial state
+      removeResumeButton();
       saveState(currentIndex, audio.currentTime || 0, true);
       return;
     }
@@ -224,13 +254,12 @@
       console.warn('fallback song.mp3 play failed', err);
     }
 
-    // final fallback: show file picker
+    // final fallback
     openFilePicker();
   }
 
-  // Attempt restoration on page load (may be blocked by autoplay)
+  // ---------- attempt restore on load (autoplay may be blocked) ----------
   async function attemptRestoreOnLoad() {
-    // only try if overlay was previously opened
     let opened = false;
     try { opened = localStorage.getItem(OPENED_KEY) === '1'; } catch(e){}
     if (!opened) return;
@@ -243,8 +272,7 @@
     const pos = st.pos || 0;
 
     try {
-      await tryPlayAt(currentIndex);
-      // set time if possible
+      await playAt(currentIndex);
       try {
         if (pos && audio.duration && pos < audio.duration) {
           audio.currentTime = pos;
@@ -256,17 +284,29 @@
         }
       } catch(e){ console.warn('set time failed', e); }
       startSaving();
-      hideResumeButton();
+      removeResumeButton();
     } catch (err) {
-      // autoplay blocked or failed — show resume button to let the user click once to resume
       console.warn('Autoplay restore blocked or failed:', err && err.message);
+      // let user manually resume
       createResumeButton();
     }
   }
 
-  // hook up overlay and DOM
+  // ---------- visits initialization ----------
+  function initVisitsElements() {
+    visitsEl = document.getElementById('visits-display');
+    visCountSpan = document.getElementById('vis-count');
+    if (!visCountSpan) {
+      // fallback: nothing to do
+      return;
+    }
+    // fetch & update (increment only once per browser)
+    fetchAndMaybeIncrementVisits();
+  }
+
+  // ---------- DOM ready ----------
   document.addEventListener('DOMContentLoaded', () => {
-    // ensure animated gradient exists one time
+    // ensure moving gradient exists
     if (!document.querySelector('.body-gradient')) {
       const bg = document.createElement('div');
       bg.className = 'body-gradient';
@@ -274,38 +314,36 @@
     }
 
     overlay = document.getElementById('open-overlay');
-    // ensure fileInput exists (some pages may already have it)
     fileInput = document.getElementById('file-input') || null;
 
-    // attach overlay handler (if overlay exists on this page)
+    // visits
+    initVisitsElements();
+
+    // overlay handling (only present on home page)
     if (overlay) {
-      // only show overlay if not already opened
       let opened = false;
       try { opened = localStorage.getItem(OPENED_KEY) === '1'; } catch(e){}
       if (opened) overlay.style.display = 'none';
       else {
-        // attach safe handlers
-        overlay.addEventListener('click', () => {
-          // handleOpenGesture returns a promise; start saving after it completes or fails
-          handleOpenGesture().then(startSaving).catch(startSaving);
-        });
-        overlay.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { handleOpenGesture().then(startSaving).catch(startSaving); } });
+        overlay.addEventListener('click', () => { handleOpenGesture().then(startSaving).catch(startSaving); });
+        overlay.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenGesture().then(startSaving).catch(startSaving); });
       }
     }
 
-    // attempt to restore on this page (will show resume button if blocked)
+    // attempt restore on any page
     attemptRestoreOnLoad();
   });
 
-  // save on visibility change / unload
+  // save on unload/visibility change
   window.addEventListener('beforeunload', () => {
-    try { saveState(currentIndex, audio.currentTime || 0, !audio.paused); } catch(e){}
+    try { localStorage.setItem(IDX_KEY, String(currentIndex)); localStorage.setItem(POS_KEY, String(audio.currentTime || 0)); localStorage.setItem(PLAYING_KEY, audio.paused ? '0' : '1'); } catch(e){}
     stopSaving();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      try { saveState(currentIndex, audio.currentTime || 0, !audio.paused); } catch(e){}
+      try { localStorage.setItem(IDX_KEY, String(currentIndex)); localStorage.setItem(POS_KEY, String(audio.currentTime || 0)); localStorage.setItem(PLAYING_KEY, audio.paused ? '0' : '1'); } catch(e){}
     }
   });
 
+  // ---- end of script ----
 })();
