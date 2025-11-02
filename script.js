@@ -8,7 +8,6 @@
   // UI
   let overlay = null;
   let fileInput = null;
-  let resumeBtn = null;
   const menuBtnId = 'song-menu-btn';
   const menuId = 'song-menu';
   const titleId = 'song-title';
@@ -27,8 +26,8 @@
   let saveInterval = null;
 
   const defaultPlaylist = [
-    "𝙳 𝚈 𝚂 𝚃 𝙾 𝙿 𝙸 𝙲 - dreamy nights (youtube).mp3",
-    "instupendo - comfort chain (speed up) - kew3z (youtube).mp3"
+    "Dystopic - dreamy nights.mp3",
+    "Comfort Chain (speed up).mp3"
   ];
 
   // helpers
@@ -64,9 +63,10 @@
     const el = document.getElementById(titleId);
     if (el) el.textContent = text || '—';
   }
-  function setPlayPauseText(paused) {
+  
+  function setPlayPauseIcon(paused) {
     const el = document.getElementById(playPauseId);
-    if (el) el.textContent = paused ? 'Play' : 'Pause';
+    if (el) el.textContent = paused ? '▶️' : '⏸️';
   }
 
   function startSaving() {
@@ -75,12 +75,13 @@
       try { saveState(currentIndex, audio.currentTime || 0, !audio.paused); } catch(e){}
     }, 1000);
   }
+  
   function stopSaving() { if (saveInterval) { clearInterval(saveInterval); saveInterval = null; } }
 
   function updateUIForCurrent() {
     const item = playlist[currentIndex] || '';
     setSongTitle(item);
-    setPlayPauseText(audio.paused);
+    setPlayPauseIcon(audio.paused);
   }
 
   function playIndex(idx) {
@@ -124,7 +125,6 @@
     const ok = await tryPlayPlaylist(startIdx).catch(()=>false);
     if (ok) {
       startSaving();
-      hideResumeBtn();
       return;
     }
 
@@ -158,44 +158,11 @@
           saveState(0, audio.currentTime || 0, true);
           startSaving();
           updateUIForCurrent();
-          hideResumeBtn();
         }).catch(err=>console.warn('file play failed', err));
       });
     }
     fileInput.click();
   }
-
-  // resume button for blocked autoplay
-  function createResumeBtn() {
-    if (resumeBtn) return;
-    resumeBtn = document.createElement('button');
-    resumeBtn.textContent = 'Resume audio';
-    Object.assign(resumeBtn.style, {
-      position:'fixed', right:'12px', top:'12px', zIndex:70,
-      padding:'8px 10px', borderRadius:'8px', border:'none',
-      background:'linear-gradient(90deg,#d94f4f,#ff9a4d)', color:'#071018',
-      fontWeight:'700', cursor:'pointer', boxShadow:'0 6px 18px rgba(0,0,0,0.4)'
-    });
-    resumeBtn.addEventListener('click', async () => {
-      hideResumeBtn();
-      const st = loadState();
-      playlist = getPlaylistFromBody() || defaultPlaylist.slice();
-      if (playlist.length === 0) playlist = ['song.mp3'];
-      currentIndex = st.idx || 0;
-      try {
-        await playIndex(currentIndex);
-        // set saved time if valid
-        try { if (st.pos && audio.duration && st.pos < audio.duration) audio.currentTime = st.pos; } catch(e){}
-        startSaving();
-      } catch (err) {
-        const ok = await tryPlayPlaylist(Math.floor(Math.random()*playlist.length)).catch(()=>false);
-        if (!ok) openFilePicker(); else startSaving();
-      }
-    });
-    document.body.appendChild(resumeBtn);
-  }
-
-  function hideResumeBtn() { if (resumeBtn && resumeBtn.parentNode) resumeBtn.parentNode.removeChild(resumeBtn); resumeBtn = null; }
 
   // song menu UI toggling
   function toggleSongMenu(show) {
@@ -207,7 +174,6 @@
     menu.setAttribute('aria-hidden', target ? 'false' : 'true');
     btn.setAttribute('aria-expanded', target ? 'true' : 'false');
     if (target) {
-      // update UI
       updateUIForCurrent();
     }
   }
@@ -249,15 +215,14 @@
           if (audio.paused) {
             try {
               await audio.play();
-              setPlayPauseText(false);
+              setPlayPauseIcon(false);
               startSaving();
             } catch (err) {
-              // if blocked, show resume button
-              createResumeBtn();
+              console.warn('Play failed:', err);
             }
           } else {
             audio.pause();
-            setPlayPauseText(true);
+            setPlayPauseIcon(true);
             saveState(currentIndex, audio.currentTime || 0, false);
           }
           updateUIForCurrent();
@@ -271,7 +236,7 @@
           try {
             await playIndex(currentIndex);
             startSaving();
-          } catch (err) { createResumeBtn(); }
+          } catch (err) { console.warn('Prev track failed:', err); }
         });
       }
       if (nextBtn) {
@@ -282,7 +247,7 @@
           try {
             await playIndex(currentIndex);
             startSaving();
-          } catch (err) { createResumeBtn(); }
+          } catch (err) { console.warn('Next track failed:', err); }
         });
       }
     }
@@ -324,10 +289,8 @@
           }
         } catch(e){ console.warn('set time failed', e); }
         startSaving();
-        hideResumeBtn();
       } catch (err) {
-        // autoplay blocked — show resume button
-        createResumeBtn();
+        console.warn('Auto-restore failed:', err);
       }
     })();
 
@@ -340,14 +303,13 @@
     audio.src = encodeSrc(playlist[currentIndex]);
     audio.play().catch(err => {
       console.warn('play next failed', err);
-      createResumeBtn();
     });
     updateUIForCurrent();
   });
 
   // update UI when play/pause toggles (for menu)
-  audio.addEventListener('play', () => { setPlayPauseText(false); startSaving(); updateUIForCurrent(); });
-  audio.addEventListener('pause', () => { setPlayPauseText(true); stopSaving(); updateUIForCurrent(); });
+  audio.addEventListener('play', () => { setPlayPauseIcon(false); startSaving(); updateUIForCurrent(); });
+  audio.addEventListener('pause', () => { setPlayPauseIcon(true); stopSaving(); updateUIForCurrent(); });
 
   // before unload save
   window.addEventListener('beforeunload', () => {
@@ -358,9 +320,6 @@
     if (document.hidden) try { saveState(currentIndex, audio.currentTime || 0, !audio.paused); } catch(e){}
   });
 
-  // helpers for menu text
-  function setSongTitle(t) { const el = document.getElementById(titleId); if (el) el.textContent = t || '—'; }
-  function setPlayPauseText(paused) { const el = document.getElementById(playPauseId); if (el) el.textContent = paused ? 'Play' : 'Pause'; }
   // expose small API for dev console debugging (optional)
   window.__afk_audio = { audio, get playlist(){ return playlist; }, get index(){ return currentIndex; } };
 
